@@ -1,0 +1,15 @@
+## https://killercoda.com/killer-shell-cks/scenario/networkpolicy-namespace-communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np
+  namespace: space2
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: space1
+  policyTypes:
+  - Ingress

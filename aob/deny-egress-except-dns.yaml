@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-out
+  # namespace: app
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    ports:
+      - port: 53
+        protocol: TCP
+      - port: 53
+        protocol: UDP
+  policyTypes:
+  - Egress
+## these should fail
+# k -n app exec app1-0 -- curl www.google.com
+# k -n app exec microservice1-0 -- curl www.google.com
+# k -n app exec app1-0 -- curl microservice1
+# k -n app exec microservice1-0 -- curl app1
+
+## DNS should still work
+# k -n app exec app1-0 -- nslookup www.google.com
+# k -n app exec microservice1-0 -- nslookup www.google.com
+# k -n app exec app1-0 -- nslookup microservice1
+# k -n app exec microservice1-0 -- nslookup app1
+
+
+## these should still work (Ingress traffic)
+# k -n default run nginx --image=nginx:1.21.5-alpine --restart=Never -i --rm  -- curl app1.app.svc.cluster.local
+# k -n default run nginx --image=nginx:1.21.5-alpine --restart=Never -i --rm  -- curl microservice1.app.svc.cluster.local

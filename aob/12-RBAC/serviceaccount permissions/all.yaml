@@ -1,0 +1,143 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline
+  namespace: ns1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline
+  namespace: ns2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+kind: ClusterRoleBinding
+metadata:
+  name: pipeline-crb
+subjects:
+- kind: ServiceAccount
+  name: pipeline # Name is case sensitive
+  namespace: ns1
+  apiGroup: ""
+- kind: ServiceAccount
+  name: pipeline # Name is case sensitive
+  namespace: ns2
+  apiGroup: ""  
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-delete-deployments
+  namespace: ns1
+rules:
+- apiGroups: ["apps"]  #### NOT IN kubernetes.io ???? !!!!!!!!!!!!!!!
+  #
+  # at the HTTP level, the name of the resource for accessing ConfigMap
+  # objects is "configmaps"
+  resources: ["deployments"]
+  #resourceNames: ["my-configmap"]
+  verbs: ["create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: create-delete-deployments
+  namespace: ns2
+rules:
+- apiGroups: ["apps"]  #### NOT IN kubernetes.io ???? !!!!!!!!!!!!!!!
+  #
+  # at the HTTP level, the name of the resource for accessing ConfigMap
+  # objects is "configmaps"
+  resources: ["deployments"]
+  #resourceNames: ["my-configmap"]
+  verbs: ["create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "dave" to read secrets in the "development" namespace.
+# You need to already have a ClusterRole named "secret-reader".
+kind: RoleBinding
+metadata:
+  name: create-delete-deployments
+  #
+  # The namespace of the RoleBinding determines where the permissions are granted.
+  # This only grants permissions within the "development" namespace.
+  namespace: ns1
+subjects:
+- kind: ServiceAccount
+  name: pipeline # Name is case sensitive
+  namespace: ns1
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: create-delete-deployments
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "dave" to read secrets in the "development" namespace.
+# You need to already have a ClusterRole named "secret-reader".
+kind: RoleBinding
+metadata:
+  name: create-delete-deployments
+  #
+  # The namespace of the RoleBinding determines where the permissions are granted.
+  # This only grants permissions within the "development" namespace.
+  namespace: ns2
+subjects:
+- kind: ServiceAccount
+  name: pipeline # Name is case sensitive
+  namespace: ns2
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: create-delete-deployments
+  apiGroup: rbac.authorization.k8s.io
+---
+
+##### Tips:
+# k get clusterrole view # there is default one
+
+# k create clusterrole -h # examples
+
+# k create rolebinding -h # examples
+
+# k auth can-i delete deployments --as system:serviceaccount:ns1:pipeline -n ns1
+
+# k -n ns1 auth can-i list pods --as system:serviceaccount:ns1:pipeline
+
+#### Solution:
+# # use ClusterRole view
+# k get clusterrole view # there is default one
+# k create clusterrolebinding pipeline-view --clusterrole view --serviceaccount ns1:pipeline --serviceaccount ns2:pipeline
+
+# # manage Deployments in both Namespaces
+# k create clusterrole -h # examples
+# k create clusterrole pipeline-deployment-manager --verb create,delete --resource deployments
+# # instead of one ClusterRole we could also create the same Role in both Namespaces
+
+# k -n ns1 create rolebinding pipeline-deployment-manager --clusterrole pipeline-deployment-manager --serviceaccount ns1:pipeline
+# k -n ns2 create rolebinding pipeline-deployment-manager --clusterrole pipeline-deployment-manager --serviceaccount ns2:pipeline
+
+#### VERIFY :::
+# # namespace ns1 deployment manager
+# k auth can-i delete deployments --as system:serviceaccount:ns1:pipeline -n ns1 # YES
+# k auth can-i create deployments --as system:serviceaccount:ns1:pipeline -n ns1 # YES
+# k auth can-i update deployments --as system:serviceaccount:ns1:pipeline -n ns1 # NO
+# k auth can-i update deployments --as system:serviceaccount:ns1:pipeline -n default # NO
+
+# # namespace ns2 deployment manager
+# k auth can-i delete deployments --as system:serviceaccount:ns2:pipeline -n ns2 # YES
+# k auth can-i create deployments --as system:serviceaccount:ns2:pipeline -n ns2 # YES
+# k auth can-i update deployments --as system:serviceaccount:ns2:pipeline -n ns2 # NO
+# k auth can-i update deployments --as system:serviceaccount:ns2:pipeline -n default # NO
+
+# # cluster wide view role
+# k auth can-i list deployments --as system:serviceaccount:ns1:pipeline -n ns1 # YES
+# k auth can-i list deployments --as system:serviceaccount:ns1:pipeline -A # YES
+# k auth can-i list pods --as system:serviceaccount:ns1:pipeline -A # YES
+# k auth can-i list pods --as system:serviceaccount:ns2:pipeline -A # YES
+# k auth can-i list secrets --as system:serviceaccount:ns2:pipeline -A # NO (default view-role doesn't allow)

@@ -1,0 +1,38 @@
+## After creating the service via:
+##    kubectl -n world expose deployment asia --port=80 --dry-run=client -oyaml
+##    kubectl -n world expose deployment europe --port=80 --dry-run=client -oyaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: world
+  namespace: world
+  #annotations:
+  #  nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - world.universe.mine
+    secretName: tls-world  
+  rules:
+  - host: "world.universe.mine"
+    http:
+      paths:
+      - path: /europe
+        pathType: Prefix
+        backend:
+          service:
+            name: europe
+            port:
+              number: 80
+      - path: /asia
+        pathType: Prefix
+        backend:
+          service:
+            name: asia
+            port:
+              number: 80
+## Create key and cert with:
+##    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt -subj "/CN=world.universe.mine/O=world.universe.mine"
+##    kubectl -n world create secret tls tls-world --cert=cert.crt --key=cert.key
+##    ## check via:  curl -kv https://world.universe.mine:30443/europe
