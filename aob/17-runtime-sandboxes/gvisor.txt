@@ -1,0 +1,58 @@
+Install and configure gVisor
+You should install gVisor on the node node01 and make containerd use it.
+
+There is install script /root/gvisor-install.sh which should setup everything, execute it on node node01 .
+
+
+Solution
+
+scp gvisor-install.sh node01:/root
+ssh node01
+    sh gvisor-install.sh
+    service kubelet status
+
+
+================
+
+Create RuntimeClass and Pod to use gVisor
+Now that gVisor should be configured, create a new RuntimeClass for it.
+
+Then create a new Pod named sec using image nginx:1.21.5-alpine .
+
+Verify your setup by running dmesg in the Pod.
+
+
+Tip
+
+The handler for the gVisor RuntimeClass is runsc .
+
+
+Solution
+
+First we create the RuntimeClass
+
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+And the Pod that uses it
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sec
+spec:
+  runtimeClassName: gvisor
+  containers:
+    - image: nginx:1.21.5-alpine
+      name: sec
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+Verify
+
+k exec sec -- dmesg | grep -i gvisor
+
+==============

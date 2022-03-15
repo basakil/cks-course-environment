@@ -1,0 +1,73 @@
+Syscall Activity Strace
+Use strace to investigate some common commands
+Use strace to see which syscalls the following commands perform:
+
+kill -9 1234
+
+kill -15 1234
+
+uname
+
+nc -l -p 8080
+
+
+Solution
+
+Usage of strace will actually list various syscalls a process makes. But let's look at a few main ones.
+
+
+strace kill -9 1234
+
+strace kill -9 1234 2>&1 | grep 1234
+
+# here we see: kill(1234, SIGKILL)
+
+strace kill -15 1234
+
+strace kill -15 1234 2>&1 | grep 1234
+
+# here we see: kill(1234, SIGTERM)
+
+strace uname
+
+# here we see: the syscall is also called just uname
+
+strace nc -l -p 8080 2>&1 | grep 8080
+
+# here we see: bind(3, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("0.0.0.0")}, 16)
+
+This should just give us a general idea of how strace works.
+
+================================
+
+
+Syscall Activity Strace
+Use strace to investigate Apiserver process
+Use strace to see what kind of syscalls the kube-apiserver process performs.
+
+
+Solution
+
+First we find the Apiserver process
+
+
+ps aux | grep kube-apiserver
+
+Then we use strace and pass the PID
+
+
+strace -p 19890 -f # use your PID
+
+# we use -f for "follow forks"
+
+Well, that's a bit much. Let's count and summarise
+
+
+strace -p 19890 -f -cw # use your PID
+
+# run for a bit, then abort with Ctrl+C
+# we should see a nice list of all syscalls.
+
+
+
+=========================================

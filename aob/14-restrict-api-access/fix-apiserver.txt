@@ -1,0 +1,38 @@
+
+--advertise-client-urls=https://172.30.1.2:2379
+
+export KUBECONFIG=/etc/kubernetes/kubelet.conf
+
+=============
+
+Enable the NodeRestriction Admission Controller and verify the issue is gone by trying to
+
+add label killercoda/two=123 to Node controlplane
+add label node-restriction.kubernetes.io/two=123 to Node node01
+
+Solution
+
+We need to enable the NodeRestriction in the Apiserver manifest
+
+
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --advertise-address=172.30.1.2
+    - --allow-privileged=true
+    - --authorization-mode=Node,RBAC
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --enable-admission-plugins=NodeRestriction
+    - --enable-bootstrap-token-auth=true
+
+Wait for apiserver restart: watch crictl ps
+
+
+ssh node01
+    export KUBECONFIG=/etc/kubernetes/kubelet.conf
+    k label node controlplane killercoda/two=123 # restricted
+    k label node node01 node-restriction.kubernetes.io/two=123 # restricted
+    k label node node01 test/two=123 # works
+
+Notice that existing restricted labels won't be removed once the NodeRestriction is enabled.

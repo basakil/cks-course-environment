@@ -1,0 +1,3 @@
+Enforcing a read-only root filesystem can make containers more secure.
+
+check for securityContext in yamls.. and their contents..

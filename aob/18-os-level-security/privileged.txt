@@ -1,0 +1,130 @@
+Create a privileged Pod
+Create a Pod named prime image nginx:alpine .
+
+The container should run as privileged .
+
+Install iptables (apk add iptables ) inside the Pod.
+
+Test the capabilities using iptables -L .
+
+
+Solution
+
+Generate Pod yaml
+
+
+k run prime --image=nginx:alpine -oyaml --dry-run=client --command -- sh -c 'sleep 1d' > pod.yaml
+
+Set the privileged :
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: prime
+  name: prime
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - sleep 1d
+    image: nginx:alpine
+    name: prime
+    securityContext:
+      privileged: true
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+Now exec into the Pod and run apk add iptables .
+
+
+k exec prime -- apk add iptables
+
+You'll see that iptables -L needs capabilities to run which it here gets through privileged.
+
+
+k exec prime -- iptables -L
+
+===================
+
+Create a privileged StatefulSet
+There is an existing StatefulSet yaml at /application/sts.yaml .
+
+It should run as privileged but it seems like it cannot be applied.
+
+Fix it and create the StatefulSet.
+
+
+Solution
+
+Edit the yaml to set privileged in the container section:
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: habanero
+spec:
+  selector:
+    matchLabels:
+      app: habanero
+  serviceName: habanero
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: habanero
+    spec:
+      #securityContext:                   # remove
+        #privileged: true                 # remove
+      containers:
+        - name: habanero
+          image: nginx:alpine
+          command:
+            - sh
+            - -c
+            - apk add iptables && sleep 1d
+          securityContext:                # add
+            privileged: true              # add
+
+======================
+
+Set Privilege Escalation for Deployment
+There is a Deployment named logger which constantly outputs the NoNewPrivs flag.
+
+Let the Pods of that Deployment run with Privilege Escalation disabled.
+
+The logs should show the field change.
+
+
+Solution
+
+Check them logs
+
+
+k logs -f deploy/logger
+
+Edit the Deployment and set the allowPrivilegeEscalation field:
+
+
+...
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: logger
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: logger
+    spec:
+      containers:
+      - image: httpd:2.4.52-alpine
+        name: httpd
+        securityContext:
+            allowPrivilegeEscalation: false
+...
+

@@ -1,0 +1,58 @@
+Container Image Footprint User
+Run the default Dockerfile
+There is a given Dockerfile under /opt/ks/Dockerfile .
+
+Using Docker:
+
+Build an image named base-image from the Dockerfile.
+Run a container named c1 from that image.
+Check under which user the sleep process is running inside the container
+
+Solution
+
+Build and run
+
+cd /opt/ks/
+docker build -t base-image .
+docker run --name c1 -d base-image
+
+Show the user of processes
+
+docker exec c1 ps
+
+(to start again) Delete container
+
+docker rm c1 --force
+
+======
+
+Container Image Footprint User
+Run container as user
+Modify the Dockerfile /opt/ks/Dockerfile to run processes as user appuser
+Update the image base-image with your change
+Build a new container c2 from that image
+Solution
+
+Add the USER docker command:
+
+FROM alpine:3.12.3
+RUN adduser -D -g '' appuser
+USER appuser
+CMD sh -c 'sleep 1d'
+
+Build and run:
+
+cd /opt/ks/
+docker build -t base-image .
+docker run --name c2 -d base-image
+
+Show the user of processes
+
+docker exec c2 ps
+
+(to start again) Delete container
+
+docker rm c2 --force
+
+====
+

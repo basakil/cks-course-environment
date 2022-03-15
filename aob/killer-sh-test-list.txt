@@ -1,0 +1,38 @@
+22. TEST - Docker Container Namespaces
+23. TEST - Podman Container Namespaces
+31. TEST - Default-Deny Network Policy
+32. TEST - NetworkPolicy Namespace Communication
+43. TEST - Create an Ingress
+44. TEST - Secure an Ingress
+49. TEST - NetworkPolicy Metadata Protection
+54. TEST - Apply CIS rules for Controlplane
+59. TEST - Verify Kubelet Binary
+66. TEST - RBAC ServiceAccount Permissions
+67. TEST - RBAC User Permissions
+68. TEST - CertificateSigningRequests Sign Manually
+69. TEST - CertificateSigningRequests Sign via API
+75. TEST - ServiceAccount Token Mounting
+84. TEST - Crash that Apiserver
+85. TEST - Apiserver Manifest Misconfigured
+86. TEST - NodeRestriction
+99. TEST - Access Secrets in Pods
+100. TEST - Read Secret Values
+101. TEST - Secrets Pods and ServiceAccount
+102. TEST - ETCD Encryption
+111. TEST - gVisor and RuntimeClass
+122. TEST - Privileged Containers
+123. TEST - Privilege Escalation Containers
+139. TEST - Image Footprint User
+140. TEST - Image Container Hardening
+148. TEST - Manual Static Analysis K8s
+149. TEST - Manual Static Analysis Docker
+154. TEST - Scan images using Trivy
+161. TEST - Complete ImagePolicyWebhook Setup
+162. TEST - Use Image Digest
+172. TEST - Syscall Activity Strace
+173. TEST - Falco Rule Change
+179. TEST - Immutability Readonly Filesystem
+186. TEST - Enable Audit Logging
+196. TEST - AppArmor
+203. TEST - Close Open Ports
+204. TEST - Manage Packages

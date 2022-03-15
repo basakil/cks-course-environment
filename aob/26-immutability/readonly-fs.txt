@@ -1,0 +1,81 @@
+Immutability Readonly Filesystem
+Create a Pod with read-only filesystem
+Create a Pod named pod-ro in Namespace sun of image busybox:1.32.0 .
+
+Make sure the container keeps running, like using sleep 1d .
+
+The container root filesystem should be read-only.
+
+
+Solution
+
+Generate Pod yaml
+
+
+k -n sun run pod-ro --image=busybox:1.32.0 -oyaml --dry-run=client --command -- sh -c 'sleep 1d' > pod.yaml
+
+Set the readOnlyRootFilesystem :
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: pod-ro
+  name: pod-ro
+  namespace: sun
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - sleep 1d
+    image: busybox:1.32.0
+    name: pod-ro
+    securityContext:
+      readOnlyRootFilesystem: true
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+========================================
+
+Immutability Readonly Filesystem
+Fix existing Nginx Deployment to work with read-only filesystem
+The Deployment web4.0 in Namespace moon doesn't seem to work with readOnlyRootFilesystem .
+
+Add an emptyDir volume to fix this.
+
+
+Tip
+
+Check the logs or the yaml to find the location that needs to be writable
+
+
+Solution
+
+Check the logs to find the location that needs to be writable
+
+k -n moon logs -f deploy/web4.0
+
+Edit the Deployment, add a new emptyDir volume
+
+
+...
+    spec:
+      containers:
+      - command:
+        - sh
+        - -c
+        - date > /etc/date.log && sleep 1d
+        image: busybox:1.32.0
+        name: container
+        securityContext:
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc
+          name: temp
+      volumes:
+      - name: temp
+        emptyDir: {}
+
+============

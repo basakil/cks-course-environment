@@ -1,0 +1,29 @@
+System Hardening Close Open Ports
+Find process listening on port and close
+There is an unwanted process running which listens on port 1234 .
+
+Kill the process and delete the binary.
+
+
+Solution
+
+Find process
+
+# using netstat
+apt install net-tools
+netstat -tulpan | grep 1234
+
+# using lsof
+lsof -i :1234
+Find pull path
+
+ls -l /proc/17773/exe # use your ID instead
+Kill and delete
+
+kill 17773 # use your ID instead
+rm /usr/bin/app1
+
+#####
+
+to stop services:
+ service stop

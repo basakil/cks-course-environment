@@ -1,0 +1,20 @@
+Image Use Digest
+Switch deployment from using tag to digest
+Convert the existing Deployment crazy-deployment to use the image digest of the current tag instead of the tag.
+
+
+Solution
+
+Find the digest, then use it
+
+
+# get digest
+k get deploy --show-labels
+k get pod -l app=crazy-deployment -oyaml | grep imageID
+
+# use digest
+k edit deploy crazy-deployment # image: httpd@sha256:c7b8040505e2e63eafc82d37148b687ff488bf6d25fc24c8bf01d71f5b457531
+
+# control
+k get pod -l app=crazy-deployment -oyaml | grep image:
+

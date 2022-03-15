@@ -1,0 +1,34 @@
+
+### additions in kube-apiserver.yaml
+
+    - --audit-policy-file=/etc/kubernetes/audit-policy/policy.yaml
+    - --audit-log-path=/etc/kubernetes/audit-logs/audit.log
+    - --audit-log-maxsize=7
+    - --audit-log-maxbackup=2
+
+
+    - mountPath: /etc/kubernetes/audit-policy/policy.yaml
+      name: audit
+      readOnly: true
+    - mountPath: /etc/kubernetes/audit-logs/
+      name: audit-log
+      readOnly: false
+
+  - name: audit
+    hostPath:
+      path: /etc/kubernetes/audit-policy/policy.yaml
+      type: File
+  - name: audit-log
+    hostPath:
+      path: /etc/kubernetes/audit-logs/
+      type: DirectoryOrCreate
+
+### then:
+watch crictl ps
+
+### if nothin:
+journalctl --no-pager -u kubelet.service | grep 'kube-apiserver'
+
+### or, multiple times:
+
+journalctl --no-pager -r -u kubelet.service | less

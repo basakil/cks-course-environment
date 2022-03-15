@@ -1,0 +1,78 @@
+Don't mount ServiceAccount token in a Pod
+Modify the the config file /opt/ks/pod-one.yaml to disable the mounting of the ServiceAccount token into that Pod.
+
+Apply the modified file /opt/ks/pod-one.yaml to Namespace one .
+
+Verify that the ServiceAccount token hasn't been mounted into the Pod.
+
+
+Solution
+
+You will need to add the following property to the Pod configuration:
+
+...
+spec:
+  serviceAccountName: custom
+  automountServiceAccountToken: false
+  containers:
+  - name: webserver
+...
+
+And apply the changes
+
+
+k -f /opt/ks/pod-one.yaml apply
+
+To verify that the token hasn't been mounted run the following commands:
+
+kubectl -n one exec -it pod-one -- mount | grep serviceaccount
+
+kubectl -n one exec -it pod-one -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
+
+Expected result:
+
+cat: /var/run/secrets/kubernetes.io/serviceaccount/token: No such file or
+
+
+================================================
+
+
+
+Don't mount ServiceAccount token for ServiceAccount
+Modify the default ServiceAccount in Namespace two to prevent any Pod that uses it from mounting its token by default.
+
+Apply the Pod configuration file /opt/ks/pod-two.yaml to Namespace two .
+
+Verify that the ServiceAccount token hasn't been mounted into the Pod.
+
+
+### my:
+
+
+
+
+Solution
+To modify the default ServiceAccount you need to run the following command:
+
+kubectl -n two edit sa default
+
+The following property is then added to the ServiceAccount configuration:
+
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: false
+metadata:
+...
+
+To verify that the token hasn't been mounted run the following commands:
+
+kubectl -n two exec -it pod-two -- mount | grep serviceaccount
+
+kubectl -n two exec -it pod-two -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
+
+Expected result:
+
+cat: /var/run/secrets/kubernetes.io/serviceaccount/token: No such file or 
+
+
+kubectl -n two exec -it pod-two -- ls -al /var/run/secrets/kubernetes.io/serviceaccount
